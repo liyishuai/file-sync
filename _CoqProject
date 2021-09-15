@@ -1,0 +1,4 @@
+-Q theories FileSync
+-arg -w -arg -notation-overridden
+theories/File.v
+theories/Sync.v

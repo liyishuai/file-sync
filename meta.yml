@@ -1,0 +1,14 @@
+---
+fullname: File Synchroniser
+shortname: file-sync
+organization: liyishuai
+synopsis: File synchroniser specification in Coq
+description: Coq formalisation of the Unison file synchroniser
+authors:
+  - name: Yishuai Li
+    email: yishuai@cis.upenn.edu
+license:
+  fullname: Mozilla Public License 2.0
+  identifier: MPL-2.0
+namespace: FileSync
+opam-file-maintainer: 'Yishuai Li <yishuai@cis.upenn.edu>'
