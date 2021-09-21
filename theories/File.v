@@ -104,6 +104,11 @@ Definition rm (p: path) (n: node) : option node :=
   then Some $ rmf p n
   else None.                    (* Target not found *)
 
+Fixpoint size (n: node) : nat :=
+  if n is Directory d
+  then fold_left plus (map (size ∘ snd) d) O
+  else 1.
+
 Fixpoint leb_node (n m: node) : bool :=
   match n, m with
   | Directory d, Directory e =>

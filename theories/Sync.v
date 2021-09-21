@@ -15,7 +15,7 @@ Definition dirty (g s: node) (p: path) : bool :=
 Definition replace (p: path) (s: node) : node -> node :=
   if cd p s is Some n then override p n else rmf p.
 
-Fixpoint recon' (g a b: node) : node * node * node :=
+(* Program *) Fixpoint recon' (g a b: node) (* {measure (size g)} *) : node * node * node :=
   if a =? g
   then (b, b, b)
   else
