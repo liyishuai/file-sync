@@ -2,3 +2,6 @@
 -arg -w -arg -notation-overridden
 theories/File.v
 theories/Sync.v
+theories/Syntax.v
+theories/Semantics.v
+theories/Server.v

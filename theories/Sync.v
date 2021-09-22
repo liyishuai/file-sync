@@ -15,7 +15,7 @@ Definition dirty (g s: node) (p: path) : bool :=
 Definition replace (p: path) (s: node) : node -> node :=
   if cd p s is Some n then override p n else rmf p.
 
-(* Program *) Fixpoint recon' (g a b: node) (* {measure (size g)} *) : node * node * node :=
+(* Program *) Fixpoint recon (g a b: node) (* {measure (size g)} *) : node * node * node :=
   if a =? g
   then (b, b, b)
   else
@@ -34,7 +34,7 @@ Definition replace (p: path) (s: node) : node -> node :=
                    match lookup f dg, lookup f da, lookup f db with
                    | Some g, Some a, Some b =>
                      let '(g', a', b') := (g, a, b) in
-                     (* let '(g', a', b') := recon' g a b in *)
+                     (* let '(g', a', b') := recon g a b in *)
                      (add f g' dg, add f a' da, add f b' db)
                    | None, Some a, Some b =>
                      if a =? b

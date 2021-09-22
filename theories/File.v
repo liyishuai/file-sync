@@ -99,6 +99,7 @@ Fixpoint rmf (p: path) (n: node) : node :=
   | _, _ => n
   end.
 
+(* rm -r *)
 Definition rm (p: path) (n: node) : option node :=
   if cd p n is Some _
   then Some $ rmf p n
