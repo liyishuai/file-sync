@@ -2,6 +2,7 @@ From Coq Require Export
      Basics
      Bool
      List
+     PeanoNat
      String.
 From ExtLib Require Export
      Extras
@@ -28,6 +29,8 @@ Definition content := string.
 Inductive node :=
   File      : content         -> node
 | Directory : alist name node -> node.
+
+Definition mapping := alist name node.
 
 Definition path := list name.    
 
@@ -107,8 +110,47 @@ Definition rm (p: path) (n: node) : option node :=
 
 Fixpoint size (n: node) : nat :=
   if n is Directory d
-  then fold_left plus (map (size ∘ snd) d) O
+  then fold_left plus (map (size ∘ snd) d) 1
   else 1.
+
+Lemma fold_left_plus : forall l n,
+    n <= fold_left plus l n.
+Proof.
+  induction l; intuition.
+  simpl.
+  apply Nat.le_trans with (n + a); intuition.
+Qed.
+
+Lemma fold_left_plus_linear : forall l n m,
+    n <= m ->
+    fold_left plus l n <= fold_left plus l m.
+Proof.
+  induction l; intuition.
+  simpl.
+  apply IHl.
+  intuition.
+Qed.
+
+Lemma size_subdir (f: name) (n: node) (d: mapping) :
+  In (f, n) d ->
+  size n < size (Directory d).
+Proof.
+  intro.
+  induction d; intuition.
+  unfold In in H.
+  fold (In (f, n) d) in H.
+  intuition.
+  - subst.
+    simpl.
+    unfold compose.
+    simpl.
+    apply Nat.lt_le_trans with (S (size n)); intuition.
+    apply fold_left_plus.
+  - simpl in *.
+    eapply Nat.lt_le_trans; eauto.
+    apply fold_left_plus_linear.
+    intuition.
+Qed.
 
 Fixpoint leb_node (n m: node) : bool :=
   match n, m with
