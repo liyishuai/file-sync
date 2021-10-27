@@ -1,5 +1,6 @@
 all: Makefile.coq
 	@+$(MAKE) -f Makefile.coq all
+	@+$(MAKE) -C extract
 
 clean: Makefile.coq
 	@+$(MAKE) -f Makefile.coq cleanall

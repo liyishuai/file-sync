@@ -20,8 +20,9 @@ Definition fstep (f: F) : state node A :=
       if mkdir p n is Some n'
       then (n', Ayes) else (n, Ano)
     | Frm p =>
-      if rm p n is Some n'
-      then (n', Ayes) else (n, Ano)
+      (rmf p n, Ayes)
+      (* if rm p n is Some n' *)
+      (* then (n', Ayes) else (n, Ano) *)
     end.
 
 Definition qstep (q: Q) : state S A :=

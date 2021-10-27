@@ -30,6 +30,8 @@ Inductive node :=
   File      : content         -> node
 | Directory : alist name node -> node.
 
+Definition emptyDir: node := Directory empty.
+
 Definition mapping := alist name node.
 
 Definition path := list name.    
@@ -59,23 +61,25 @@ Fixpoint override (p: path) (m n: node) : node :=
   match p, n with
   | [], _ => m
   | f::p, Directory d =>
-    let n0 := if lookup f d is Some d0 then d0 else Directory [] in
+    let n0 := if lookup f d is Some d0 then d0 else emptyDir in
     Directory $ add f (override p m n0) d
-  | f::p, File _ => Directory [(f, override p m $ Directory [])]
+  | f::p, File _ => Directory [(f, override p m $ emptyDir)]
   end.
 
 (* mkdir -p *)
 Fixpoint mkdirp (p: path) (n: node) : option node :=
   match p, n with
   | [f], Directory d =>
-    if lookup f d is Some _
-    then None                   (* Already exists *)
-    else Some $ Directory $ add f (Directory []) d
+    match lookup f d with
+    | Some (Directory _) => Some n
+    | Some (File _)      => None
+    | None => Some $ Directory $ add f emptyDir d
+    end
   | f::p, Directory d =>
     if lookup f d is Some n
     then n' <- mkdirp p n;;
          Some (Directory $ add f n' d)
-    else Some $ Directory $ add f (Directory []) d
+    else Some $ Directory $ add f emptyDir d
   | _, _ => None
   end.
 
@@ -104,9 +108,9 @@ Fixpoint rmf (p: path) (n: node) : node :=
 
 (* rm -r *)
 Definition rm (p: path) (n: node) : option node :=
-  if cd p n is Some _
+  if cd (dirname p) n is Some (Directory _)
   then Some $ rmf p n
-  else None.                    (* Target not found *)
+  else None.                    (* Parent not found *)
 
 Fixpoint size (n: node) : nat :=
   if n is Directory d

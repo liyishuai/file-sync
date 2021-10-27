@@ -34,3 +34,7 @@ nra.cache
 Makefile.coq
 Makefile.coq.conf
 *~
+*.ml*
+_build
+A/
+B/

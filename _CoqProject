@@ -5,3 +5,5 @@ theories/Sync.v
 theories/Syntax.v
 theories/Semantics.v
 theories/Server.v
+theories/Gen.v
+theories/Execute.v

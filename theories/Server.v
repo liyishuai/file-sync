@@ -34,21 +34,19 @@ Definition serverOf (step: Q -> state S A) : S -> itree serverE void :=
          embed Server__Exec q a;;
          call s').
 
-Variant observerE : Type -> Type :=
-  Observer__FromServer : Q -> observerE A
-| Observer__FromClient : S -> observerE Q.
+Variant observeE : Type -> Type :=
+  Observe__FromServer : Q -> observeE A
+| Observe__FromClient : S -> observeE Q.
 
-Notation failureE := (exceptE string).
-
-Class Is__oE E `{observerE -< E} `{failureE -< E}.
+Class Is__oE E `{observeE -< E} `{exceptE string -< E}.
 
 Definition observe {E} `{Is__oE E} (m: itree serverE void) : itree E void :=
   interp
     (fun _ e =>
        match e in serverE Y return _ Y with
-       | Server__Recv s => embed Observer__FromClient s
+       | Server__Recv s => embed Observe__FromClient s
        | Server__Exec q a =>
-         a' <- embed Observer__FromServer q;;
+         a' <- embed Observe__FromServer q;;
          if a' ?[ eq ] a
          then Ret tt
          else throw $ "Upon " ++ to_string q ++
@@ -57,3 +55,10 @@ Definition observe {E} `{Is__oE E} (m: itree serverE void) : itree E void :=
        end) m.
 
 End Server.
+
+Arguments serverOf {_ _ _}.
+Arguments observe  {_ _ _ _ _ _ _ _ _ _}.
+
+Notation failureE := (exceptE string).
+Notation oE Q A S := (observeE Q A S +' failureE).
+Instance oE_Is__oE Q A S : Is__oE Q A S (oE Q A S). Defined.

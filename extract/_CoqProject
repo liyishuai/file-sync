@@ -1,0 +1,3 @@
+-Q ../theories FileSync
+-arg -w -arg -notation-overridden
+FileTest.v

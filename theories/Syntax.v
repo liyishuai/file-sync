@@ -26,6 +26,7 @@ Variant Q :=
 | QSync.
 
 Definition S : Type := node * node * node.
+Definition initS: S := (emptyDir, emptyDir, emptyDir).
 
 Instance RelDec_A : RelDec (@eq A) :=
   { rel_dec a b :=
