@@ -53,7 +53,7 @@ Program Fixpoint recon (g a b: node) {measure (size g)} : node * node * node :=
                      (add f a, id, add f a)
                    | _, None, None =>
                      (remove f, id, id)
-                   end) (map fst $ da ++ db) in
+                   end) (map fst $ dg ++ da ++ db) in
           let '(dg', da', db') :=
               @fold_left (_ * _ * _) (_ * _ * _)
                          (fun '(dg, da, db) '(fg, fa, fb) =>

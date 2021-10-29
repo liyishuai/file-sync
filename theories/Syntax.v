@@ -2,6 +2,8 @@ From FileSync Require Export
      File.
 From ExtLib Require Export
      List
+     Sets
+     ListSet
      RelDec.
 From Ceres Require Export
      Ceres.
@@ -31,7 +33,7 @@ Definition initS: S := (emptyDir, emptyDir, emptyDir).
 Instance RelDec_A : RelDec (@eq A) :=
   { rel_dec a b :=
       match a, b with
-      | Als   x, Als   y
+      | Als x, Als y => subset x y &&& subset y x
       | Aread x, Aread y => x ?[ eq ] y
       | Ayes   , Ayes
       | Ano    , Ano     => true
