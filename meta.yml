@@ -12,9 +12,10 @@ license:
   identifier: MPL-2.0
 namespace: FileSync
 opam-file-maintainer: 'Yishuai Li <yishuai@cis.upenn.edu>'
+ci_extra_dev: true
 supported_coq_versions:
-  text: 8.9 or later
-  opam: '{ >= "8.9~" }'
+  text: 8.12 or later
+  opam: '{ >= "8.12~" }'
 dependencies:
   - description: '[Cérès](https://github.com/Lysxia/coq-ceres)'
     opam:
@@ -22,11 +23,14 @@ dependencies:
   - description: '[ITreeIO](https://github.com/Lysxia/coq-itree-io)'
     opam:
       name: coq-itree-io
+  - description: '[OCamlbuild](https://github.com/ocaml/ocamlbuild)'
+    opam:
+      name: ocamlbuild
+  - description: '[Fileutils](https://github.com/gildor478/ocaml-fileutils)'
+    opam:
+      name: fileutils
 action: true
 tested_coq_opam_versions:
   - version: '8.14'
   - version: '8.13'
   - version: '8.12'
-  - version: '8.11'
-  - version: '8.10'
-  - version: '8.9'

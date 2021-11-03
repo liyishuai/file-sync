@@ -64,11 +64,11 @@ Definition read_file' (p: path) : IO content :=
   ret (from_ostring ostr).
 
 Definition read_file (p: path) : IO A :=
-  oc <- catch_exc (read_file' p);;
+  oc <- catch_any_exc (read_file' p);;
   ret (if oc is Some c then Aread c else Ano).
 
 Definition write_file (p: path) (str: content) : IO A :=
-  ou <- catch_exc (cout <- open_out (flatten p);;
+  ou <- catch_any_exc (cout <- open_out (flatten p);;
                    output_string cout str;;
                    close_out_noerr cout);;
   ret (if ou is Some tt then Ayes else Ano).
