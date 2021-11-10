@@ -146,7 +146,8 @@ Definition gen_step (s: gen_state) (t: traceT) : IO jexp :=
   target <- io_choose [1; 2];;
   method <- io_choose ["ls"; "read"; "mkdir"; "write"];;
   (* Todo: choose path from ls response. *)
-  p <- io_choose (pathsOf g ++ pathsOf a ++ pathsOf b);;
+  p <- io_or (io_choose (pathsOf g ++ pathsOf a ++ pathsOf b))
+             (gen_many 3 gen_string);;
   c <- gen_string;;
   io_choose [Jexp__Const JSON__Null;
             (jobj "target" target +
