@@ -36,6 +36,12 @@ Definition mapping := alist name node.
 
 Definition path := list name.    
 
+Fixpoint pathsOf (n: node) : list path :=
+  if n is Directory d then
+    []::('(f, n') <- (d: list _);;
+         cons f <$> pathsOf n')
+  else [[]].
+
 Definition basename : path -> name := flip (@last name) "".
 Definition dirname  : path -> path := @removelast name.
 

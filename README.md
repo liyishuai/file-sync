@@ -21,8 +21,7 @@ Coq formalisation of the Unison file synchroniser
 - License: [Mozilla Public License 2.0](LICENSE)
 - Compatible Coq versions: 8.12 or later
 - Additional dependencies:
-  - [Cérès](https://github.com/Lysxia/coq-ceres)
-  - [ITreeIO](https://github.com/Lysxia/coq-itree-io)
+  - [AsyncTest](https://github.com/liyishuai/coq-async-test)
   - [OCamlbuild](https://github.com/ocaml/ocamlbuild)
   - [Fileutils](https://github.com/gildor478/ocaml-fileutils)
 - Coq namespace: `FileSync`

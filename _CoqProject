@@ -6,4 +6,6 @@ theories/Syntax.v
 theories/Semantics.v
 theories/Server.v
 theories/Gen.v
+theories/Trace.v
+theories/AsyncTest.v
 theories/Execute.v

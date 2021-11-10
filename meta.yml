@@ -17,12 +17,9 @@ supported_coq_versions:
   text: 8.12 or later
   opam: '{ >= "8.12~" }'
 dependencies:
-  - description: '[Cérès](https://github.com/Lysxia/coq-ceres)'
+  - description: '[AsyncTest](https://github.com/liyishuai/coq-async-test)'
     opam:
-      name: coq-ceres
-  - description: '[ITreeIO](https://github.com/Lysxia/coq-itree-io)'
-    opam:
-      name: coq-itree-io
+      name: coq-async-test
   - description: '[OCamlbuild](https://github.com/ocaml/ocamlbuild)'
     opam:
       name: ocamlbuild
@@ -31,6 +28,6 @@ dependencies:
       name: fileutils
 action: true
 tested_coq_opam_versions:
-  - version: '8.14'
-  - version: '8.13'
-  - version: '8.12'
+  - version: '8.14-ocaml-4.12-flambda'
+  - version: '8.13-ocaml-4.12-flambda'
+  - version: '8.12-ocaml-4.11-flambda'

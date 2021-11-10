@@ -1,0 +1,141 @@
+From QuickChick Require Export
+     QuickChick.
+From ITree Require Export
+     Exception
+     ITree.
+From SimpleIO Require Export
+     SimpleIO.
+From AsyncTest Require Export
+     Instances.
+From FileSync Require Export
+     Trace.
+Export
+  SumNotations.
+Open Scope sum_scope.
+
+Variant clientE {gen_state} : Type -> Type :=
+  Client__Exec : IR        -> clientE IR
+| Client__Gen  : gen_state -> clientE IR.
+Arguments clientE: clear implicits.
+
+Module Type AsyncTestSIG.
+
+Parameter gen_state     : Type.
+Parameter otherE        : Type -> Type.
+Parameter other_handler : otherE ~> IO.
+Arguments other_handler {_}.
+
+Notation failureE       := (exceptE string).
+Notation tE             := (failureE +' clientE gen_state +' otherE).
+
+Parameter exec_request  : IR -> IO IR.
+
+Parameter gen_step      : gen_state -> traceT -> IO jexp.
+
+Parameter tester_state  : Type.
+Parameter tester_init   : IO tester_state.
+Parameter tester        : tester_state -> itree tE void.
+
+End AsyncTestSIG.
+
+Module AsyncTest (SIG : AsyncTestSIG).
+Include SIG.
+
+Notation scriptT := (list (jexp * labelT)).
+
+Definition shrink_execute' (exec : scriptT -> IO (bool * traceT))
+           (init : scriptT) : IO (option scriptT) :=
+  prerr_endline "===== initial script =====";;
+  prerr_endline (to_string init);;
+  IO.fix_io
+    (fun shrink_rec ss =>
+       match ss with
+       | [] => prerr_endline "<<<<< shrink exhausted >>>>";; ret None
+       | sc :: ss' =>
+         prerr_endline (to_string (List.length ss'));;
+         (* prerr_endline "<<<<< current script >>>>>>";; *)
+         (* prerr_endline (to_string sc);; *)
+         '(b, tr) <- exec sc;;
+         if b : bool
+         then (* prerr_endline "===== accepting trace =====";; *)
+              (* prerr_endline (to_string tr);; *)
+              shrink_rec ss'
+         else prerr_endline "<<<<< rejecting trace >>>>>";;
+              prerr_endline (to_string tr);;
+              (* prerr_endline "<<<<< shrink ended >>>>>>>>";; *)
+              ret (Some sc)
+       end) (repeat_list 10 $ shrinkListAux (const []) init).
+
+Definition shrink_execute (first_exec : IO (bool * (scriptT * traceT)))
+           (then_exec : scriptT -> IO (bool * traceT)) : IO bool :=
+  '(b, (sc, tr)) <- first_exec;;
+  if b : bool
+  then ret true
+  else prerr_endline "<<<<< rejecting trace >>>>>";;
+       prerr_endline (to_string tr);;
+       IO.while_loop (shrink_execute' then_exec) sc;;
+       ret false.
+
+Fixpoint execute' {R} (fuel : nat) (oscript : option scriptT)
+         (acc : scriptT * traceT) (m : itree tE R)
+  : IO (bool * (scriptT * traceT)) :=
+  let (script0, trace0) := acc in
+  match fuel with
+  | O => ret (true, acc)
+  | S fuel =>
+    match observe m with
+    | RetF _ => ret (true, acc)
+    | TauF m' => execute' fuel oscript acc m'
+    | VisF e k =>
+      match e with
+      | (Throw err|) =>
+        prerr_endline err;;
+        ret (false, acc)
+      | (|ce|) =>
+        match ce in clientE _ Y return (Y -> _) -> _ with
+        | Client__Exec q =>
+          fun k =>
+            match trace0 with
+            | [] =>
+              prerr_endline "Should not happen: exec on empty trace";;
+              ret (false, acc)
+            | t0::l0 =>
+              let label: labelT := fst (last l0 t0) in
+              a <- exec_request q;;
+              execute' fuel oscript (script0, trace0++[(label, (q, a))]) (k a)
+            end
+        | Client__Gen gs =>
+          fun k => '(ostep, osc') <-
+                 match oscript with
+                 | Some [] => ret (None, Some [])
+                 | Some (sc :: script') =>
+                   ret (Some sc, Some script')
+                 | None =>
+                   let l : labelT := S $ fold_left max (map snd script0) O in
+                   step <- gen_step gs trace0;;
+                   ret (Some (step, l), None)
+                 end;;
+                 match ostep with
+                 | Some ((e, l) as step) =>
+                   let req : IR := jexp_to_IR_weak trace0 e in
+                   execute' fuel osc' (script0++[step], trace0) (k req)
+                 | None =>
+                   prerr_endline "Script exhausted";;
+                   ret (true, acc)
+                 end
+        end k
+      | (||oe) => other_handler oe >>= execute' fuel oscript acc ∘ k
+      end
+    end
+  end.
+
+Definition execute {R} (m : tester_state -> itree tE R)
+           (oscript : option scriptT) : IO (bool * (scriptT * traceT)) :=
+  tester_init_state <- tester_init;;
+  execute' 5000 oscript ([], []) (m tester_init_state).
+
+Definition test : IO bool :=
+  shrink_execute (execute tester None)
+                 (fmap (fun '(b, (_, t)) => (b, t)) ∘ execute tester ∘ Some).
+
+End AsyncTest.
