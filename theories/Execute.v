@@ -161,7 +161,7 @@ Definition tester_init: IO tester_state :=
   orm ["A"; "B"];;
   omkdir "A";;
   omkdir "B";;
-  command "unison -batch A B";;
+  command "unison A B -batch -silent";;
   ret tt.
 Definition fileServer   := serverOf qstep initS.
 Definition fileObserver := observe fileServer.
@@ -172,6 +172,19 @@ End FileTypes.
 
 Module FileTest := AsyncTest FileTypes.
 
+Fixpoint multi_test' (fuel : nat) (test : IO bool) : IO unit :=
+  match fuel with
+  | O => prerr_endline "Success"
+  | Datatypes.S fuel =>
+    b <- test;;
+    if b : bool
+    then
+      prerr_endline (to_string fuel);;
+      multi_test' fuel test
+    else prerr_endline "Failure"
+  end.
+
+Definition multi_test : IO bool -> IO unit := multi_test' 5000.
+
 Definition fileTester: IO unit :=
-  b <- FileTest.test;;
-  prerr_endline (if b : bool then "Passed" else "Failed").
+  multi_test FileTest.test.

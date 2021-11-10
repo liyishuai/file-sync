@@ -70,7 +70,10 @@ Definition shrink_execute (first_exec : IO (bool * (scriptT * traceT)))
            (then_exec : scriptT -> IO (bool * traceT)) : IO bool :=
   '(b, (sc, tr)) <- first_exec;;
   if b : bool
-  then ret true
+  then
+    (* prerr_endline "===== accepting trace =====";; *)
+    (* prerr_endline (to_string tr);; *)
+    ret true
   else prerr_endline "<<<<< rejecting trace >>>>>";;
        prerr_endline (to_string tr);;
        IO.while_loop (shrink_execute' then_exec) sc;;
