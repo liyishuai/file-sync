@@ -102,7 +102,7 @@ Fixpoint execute' {R} (fuel : nat) (oscript : option scriptT)
             | t0::l0 =>
               let label: labelT := fst (last l0 t0) in
               a <- exec_request q;;
-              execute' fuel oscript (script0, trace0++[(label, (q, a))]) (k a)
+              execute' fuel oscript (script0, trace0++[(label, a)]) (k a)
             end
         | Client__Gen gs =>
           fun k => '(ostep, osc') <-
@@ -118,7 +118,7 @@ Fixpoint execute' {R} (fuel : nat) (oscript : option scriptT)
                  match ostep with
                  | Some ((e, l) as step) =>
                    let req : IR := jexp_to_IR_weak trace0 e in
-                   execute' fuel osc' (script0++[step], trace0) (k req)
+                   execute' fuel osc' (script0++[step], trace0++[(l, req)]) (k req)
                  | None =>
                    prerr_endline "Script exhausted";;
                    ret (true, acc)

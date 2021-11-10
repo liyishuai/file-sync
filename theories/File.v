@@ -86,7 +86,8 @@ Fixpoint mkdirp (p: path) (n: node) : option node :=
     then n' <- mkdirp p n;;
          Some (Directory $ add f n' d)
     else Some $ Directory $ add f emptyDir d
-  | _, _ => None
+  | [], Directory _ => Some n
+  | _ , File      _ => None
   end.
 
 Definition mkdir (p: path) (n: node) : option node :=
@@ -95,6 +96,7 @@ Definition mkdir (p: path) (n: node) : option node :=
   else None.                    (* Parent not found *)   
 
 Definition write (p: path) (c: content) (n: node) : option node :=
+  if p is [] then None else
   if cd (dirname p) n is Some ((Directory _) as d)
   then if cd [basename p] d is Some (Directory _)
        then None                (* Cannot write to directory *)

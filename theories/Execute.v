@@ -36,6 +36,7 @@ Extract Constant omkdir =>
   "fun p k -> k (try FileUtil.mkdir p; true with
    | FileUtil.MkdirError str -> prerr_endline str; false
    | _ -> prerr_endline ""mkdir: error""; false)".
+
 Extract Inductive string => "string"
 [
 (* EmptyString *)
@@ -126,7 +127,7 @@ Definition exec_request (j: IR) : IO IR :=
   match JDecode__Q j with
   | inl str => failwith str
   | inr QSync =>
-    command "unison -batch A B";; ret JSON__True
+    command "unison A B -batch -silent";; ret JSON__True
   | inr (QFile r f) =>
     let base: path := if r is R1 then ["A"] else ["B"] in
     match f with

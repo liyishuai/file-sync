@@ -3,15 +3,15 @@ From FileSync Require Import
 From AsyncTest Require Import
      Jexp.
 
-Definition traceT := list (labelT * (IR * IR)).
+Definition traceT := list (labelT * IR).
 
 Example tget_strong (l : labelT) (p : jpath) (t : traceT) : IR :=
-  odflt (JSON__Object []) $ snd <$> get l t >>= jget p.
+  odflt (JSON__Object []) $ get l t >>= jget p.
 
 Definition tget_weak' (jget : jpath -> IR -> option IR)
            (l : labelT) (p : jpath) (t : traceT) : IR :=
-  odflt (last (pick_some $ map (jget p ∘ snd ∘ snd) t) $ JSON__Object []) $
-        snd <$> get l t >>= jget p.
+  odflt (last (pick_some $ map (jget p ∘ snd) t) $ JSON__Object []) $
+        get l t >>= jget p.
 
 Definition tget_weak : labelT -> jpath -> traceT -> IR := tget_weak' jget_weak.
 
@@ -29,7 +29,7 @@ Example jexp_to_IR_strong : traceT -> jexp -> IR := jexp_to_IR' tget_strong.
 Definition jexp_to_IR_weak : traceT -> jexp -> IR := jexp_to_IR' tget_weak.
 
 Definition findpath' (p : jpath) : traceT -> list labelT :=
-  fmap fst ∘ filter (fun lj => if jget_weak p (snd $ snd lj) is Some _
+  fmap fst ∘ filter (fun lj => if jget_weak p (snd lj) is Some _
                              then true else false).
 
 Definition findpath (p : jpath) (f : IR -> IR) (t : traceT) : list jexp :=
