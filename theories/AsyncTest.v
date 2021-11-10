@@ -45,24 +45,24 @@ Notation scriptT := (list (jexp * labelT)).
 
 Definition shrink_execute' (exec : scriptT -> IO (bool * traceT))
            (init : scriptT) : IO (option scriptT) :=
-  prerr_endline "===== initial script =====";;
-  prerr_endline (to_string init);;
+  print_endline "===== initial script =====";;
+  print_endline (to_string init);;
   IO.fix_io
     (fun shrink_rec ss =>
        match ss with
-       | [] => prerr_endline "<<<<< shrink exhausted >>>>";; ret None
+       | [] => print_endline "<<<<< shrink exhausted >>>>";; ret None
        | sc :: ss' =>
          prerr_endline (to_string (List.length ss'));;
-         (* prerr_endline "<<<<< current script >>>>>>";; *)
-         (* prerr_endline (to_string sc);; *)
+         (* print_endline "<<<<< current script >>>>>>";; *)
+         (* print_endline (to_string sc);; *)
          '(b, tr) <- exec sc;;
          if b : bool
-         then (* prerr_endline "===== accepting trace =====";; *)
-              (* prerr_endline (to_string tr);; *)
+         then (* print_endline "===== accepting trace =====";; *)
+              (* print_endline (to_string tr);; *)
               shrink_rec ss'
-         else prerr_endline "<<<<< rejecting trace >>>>>";;
-              prerr_endline (to_string tr);;
-              (* prerr_endline "<<<<< shrink ended >>>>>>>>";; *)
+         else print_endline "<<<<< rejecting trace >>>>>";;
+              print_endline (to_string tr);;
+              (* print_endline "<<<<< shrink ended >>>>>>>>";; *)
               ret (Some sc)
        end) (repeat_list 10 $ shrinkListAux (const []) init).
 
@@ -71,11 +71,11 @@ Definition shrink_execute (first_exec : IO (bool * (scriptT * traceT)))
   '(b, (sc, tr)) <- first_exec;;
   if b : bool
   then
-    (* prerr_endline "===== accepting trace =====";; *)
-    (* prerr_endline (to_string tr);; *)
+    (* print_endline "===== accepting trace =====";; *)
+    (* print_endline (to_string tr);; *)
     ret true
-  else prerr_endline "<<<<< rejecting trace >>>>>";;
-       prerr_endline (to_string tr);;
+  else print_endline "<<<<< rejecting trace >>>>>";;
+       print_endline (to_string tr);;
        IO.while_loop (shrink_execute' then_exec) sc;;
        ret false.
 
@@ -92,7 +92,7 @@ Fixpoint execute' {R} (fuel : nat) (oscript : option scriptT)
     | VisF e k =>
       match e with
       | (Throw err|) =>
-        prerr_endline err;;
+        print_endline err;;
         ret (false, acc)
       | (|ce|) =>
         match ce in clientE _ Y return (Y -> _) -> _ with
@@ -100,7 +100,7 @@ Fixpoint execute' {R} (fuel : nat) (oscript : option scriptT)
           fun k =>
             match trace0 with
             | [] =>
-              prerr_endline "Should not happen: exec on empty trace";;
+              print_endline "Should not happen: exec on empty trace";;
               ret (false, acc)
             | t0::l0 =>
               let label: labelT := fst (last l0 t0) in

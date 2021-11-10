@@ -6,6 +6,7 @@ From FileSync Require Export
      Server
      Semantics.
 From SimpleIO Require Export
+     IO_Float
      IO_Random
      IO_Sys
      SimpleIO.
@@ -30,8 +31,8 @@ Extract Constant ols =>
    _ -> prerr_endline ""ls: error""; [])".
 Extract Constant orm =>
   "fun p k -> k (try FileUtil.rm ~recurse:true p; true with
-   | FileUtil.RmError str -> prerr_endline str; false
-   | _ -> prerr_endline ""rm: error""; false)".
+   | FileUtil.RmError str -> prerr_endline str; true
+   | _ -> prerr_endline ""rm: error""; true)".
 Extract Constant omkdir =>
   "fun p k -> k (try FileUtil.mkdir p; true with
    | FileUtil.MkdirError str -> prerr_endline str; false
@@ -74,10 +75,8 @@ Definition read_file (p: path) : IO IR :=
   ret (if oc is Some c then JEncode__String c else JSON__False).
 
 Definition write_file (p: path) (str: content) : IO IR :=
-  ou <- catch_any_exc (cout <- open_out (flatten p);;
-                   output_string cout str;;
-                   close_out_noerr cout);;
-  ret (if ou is Some tt then JSON__True else JSON__False).
+  i <- command ("echo -n " ++ str ++ " > " ++ flatten p);;
+  ret (if nat_of_int i is O then JSON__True else JSON__False).
 
 Arguments Observe__FromServer {_ _ _}.
 Arguments Observe__FromClient {_ _ _}.
@@ -113,6 +112,13 @@ Definition toClient T (oe: oE _ _ _ T) : itree tE T :=
   | (|Throw str) => throw str
   end.
 
+Parameter sleepf : float -> IO unit.
+Extract Constant sleepf => "fun f k -> k (Unix.sleepf f)".
+
+Definition UNISON: IO int :=
+  sleepf (OFloat.Unsafe.of_string "1e-3");;
+  command "unison A B -batch -confirmbigdel=false".
+
 Module FileTypes: AsyncTestSIG.
 
 Definition gen_state := S.
@@ -127,7 +133,8 @@ Definition exec_request (j: IR) : IO IR :=
   match JDecode__Q j with
   | inl str => failwith str
   | inr QSync =>
-    command "unison A B -batch -silent";; ret JSON__True
+    UNISON;;
+    ret JSON__True
   | inr (QFile r f) =>
     let base: path := if r is R1 then ["A"] else ["B"] in
     match f with
@@ -135,7 +142,8 @@ Definition exec_request (j: IR) : IO IR :=
     | Fread  p   => read_file (base ++ p)
     | Fwrite p s => write_file (base ++ p) s
     | Fmkdir p   => JEncode__bool <$> omkdir (flatten (base ++ p))
-    | Frm    p   => JEncode__bool <$> orm [flatten (base ++ p)]
+    | Frm    p   => if p is [] then ret JSON__False else
+                     JEncode__bool <$> orm [flatten (base ++ p)]
     end
   end.
 
@@ -144,7 +152,7 @@ Open Scope jexp_scope.
 Definition gen_step (s: gen_state) (t: traceT) : IO jexp :=
   let '(g, a, b) := s in
   target <- io_choose [1; 2];;
-  method <- io_choose ["ls"; "read"; "mkdir"; "write"];;
+  method <- io_choose ["ls"; "read"; "mkdir"; "write"; "rm"];;
   (* Todo: choose path from ls response. *)
   p <- io_or (io_choose (pathsOf g ++ pathsOf a ++ pathsOf b))
              (gen_many 3 gen_string);;
@@ -159,11 +167,10 @@ Close Scope jexp_scope.
 
 Definition tester_state := unit.
 Definition tester_init: IO tester_state :=
-  orm ["A"; "B"];;
-  omkdir "A";;
-  omkdir "B";;
-  command "unison A B -batch -silent";;
+  command "rm -rf A B; mkdir A B";;
+  UNISON;;
   ret tt.
+
 Definition fileServer   := serverOf qstep initS.
 Definition fileObserver := observe fileServer.
 
@@ -175,14 +182,14 @@ Module FileTest := AsyncTest FileTypes.
 
 Fixpoint multi_test' (fuel : nat) (test : IO bool) : IO unit :=
   match fuel with
-  | O => prerr_endline "Success"
+  | O => print_endline "Success"
   | Datatypes.S fuel =>
     b <- test;;
     if b : bool
     then
-      prerr_endline (to_string fuel);;
+      print_endline (to_string fuel);;
       multi_test' fuel test
-    else prerr_endline "Failure"
+    else print_endline "Failure"
   end.
 
 Definition multi_test : IO bool -> IO unit := multi_test' 5000.

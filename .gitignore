@@ -38,3 +38,4 @@ Makefile.coq.conf
 _build
 A/
 B/
+logs.txt

@@ -101,6 +101,7 @@ Instance JDecode__Q: JDecode Q :=
      m <- dpath "method" j;;
      p <- dpath "path"   j;;
      f <- (match m with
+           | "rm"    => inr $ Frm p
            | "ls"    => inr $ Fls p
            | "read"  => inr $ Fread p
            | "mkdir" => inr $ Fmkdir p
