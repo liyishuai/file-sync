@@ -1,1 +1,1 @@
-true: package(fileutils)
+true: package(fileutils,zarith)
