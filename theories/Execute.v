@@ -86,6 +86,7 @@ Variant logE : Type -> Set :=
 
 Class Is__tE E `{failureE -< E} `{clientE S -< E} `{logE -< E}.
 Notation tE := (failureE +' clientE S +' logE).
+#[export]
 Instance tE_Is__tE: Is__tE tE. Defined.
 
 Definition toClient T (oe: oE _ _ _ T) : itree tE T :=

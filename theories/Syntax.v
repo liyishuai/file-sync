@@ -36,6 +36,7 @@ Variant Q :=
 Definition S : Type := node * node * node.
 Definition initS: S := (emptyDir, emptyDir, emptyDir).
 
+#[export]
 Instance RelDec_A : RelDec (@eq A) :=
   { rel_dec a b :=
       match a, b with
@@ -49,6 +50,7 @@ Instance RelDec_A : RelDec (@eq A) :=
 
 Open Scope sexp_scope.
 
+#[export]
 Instance Serialize__A: Serialize A :=
   fun a => match a with
          | Als   l => to_sexp l
@@ -57,6 +59,7 @@ Instance Serialize__A: Serialize A :=
          | Ano     => Atom "no"
          end.
 
+#[export]
 Instance Serialize__F: Serialize F :=
   fun f => match f with
          | Fls    p   => [Atom "ls"   ; to_sexp p]
@@ -66,15 +69,18 @@ Instance Serialize__F: Serialize F :=
          | Frm    p   => [Atom "rm"   ; to_sexp p]
          end.
 
+#[export]
 Instance Serialize__R: Serialize R :=
   fun r => Atom (if r is R1 then 1 else 2)%Z.
 
+#[export]
 Instance Serialize__Q: Serialize Q :=
   fun q => if q is QFile r f then [to_sexp r; to_sexp f]
          else Atom "Sync".
 
 Close Scope sexp_scope.
 
+#[export]
 Instance JDecode__A: JDecode A :=
   fun j =>
     (b <- JDecode__bool j;; inr (if b : bool then Ayes else Ano))
@@ -83,6 +89,7 @@ Instance JDecode__A: JDecode A :=
 
 Close Scope list_scope.
 
+#[export]
 Instance JDecode__R: JDecode R :=
   fun j =>
     r <- JDecode__nat j;;
@@ -92,9 +99,11 @@ Instance JDecode__R: JDecode R :=
     | _ => inl $ "Invalid replica: " ++ to_string r
     end.
 
+#[export]
 Instance JDecode__path: JDecode path :=
   @decode__list string _.
 
+#[export]
 Instance JDecode__Q: JDecode Q :=
   fun j =>
     (r <- dpath "target" j;;
@@ -111,6 +120,7 @@ Instance JDecode__Q: JDecode Q :=
     inr (QFile r f))%string
     <|> (JDecode__unit j;; inr QSync).
 
+#[export]
 Instance JEncode__F: JEncode F :=
   fun f =>
     match f with
@@ -121,6 +131,7 @@ Instance JEncode__F: JEncode F :=
     | Fwrite p c => jobj "method" "write" + jobj "path" p + jobj "content" c
     end.
 
+#[export]
 Instance JEncode__Q: JEncode Q :=
   fun q =>
     match q with

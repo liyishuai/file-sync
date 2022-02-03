@@ -23,6 +23,8 @@ Open Scope monad_scope.
 Open Scope lazy_bool_scope.
 Open Scope program_scope.
 
+Declare Scope file_scope.
+
 Definition name    := string.
 Definition content := string.
 

@@ -3,6 +3,8 @@ From SimpleIO Require Import
 From FileSync Require Import
      Execute.
 
+Set Warnings "-extraction-reserved-identifier,-extraction".
+
 Definition run_test: io_unit :=
   IO.unsafe_run' (ORandom.self_init tt;; fileTester).
 
