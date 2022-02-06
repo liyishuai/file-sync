@@ -150,13 +150,27 @@ Definition exec_request (j: IR) : IO IR :=
 
 Open Scope jexp_scope.
 
+Definition isAls (irA: IR) : bool :=
+  if Decode.decode irA is inr (Als _) then true else false.
+
 Definition gen_step (s: gen_state) (t: traceT) : IO jexp :=
   let '(g, a, b) := s in
   target <- io_choose [1; 2];;
   method <- io_choose ["ls"; "read"; "mkdir"; "write"; "rm"];;
-  (* Todo: choose path from ls response. *)
-  p <- io_or (io_choose (pathsOf g ++ pathsOf a ++ pathsOf b))
-             (gen_many 3 gen_string);;
+  let lsA : list (labelT * IR) := List.filter (isAls ∘ snd) t in
+  let pls : list path :=
+    '(labelA, irA) <- lsA;;
+    '(labelQ, irQ) <- List.filter (Nat.eqb labelA ∘ fst) t;;
+    let children : list path :=
+      if Decode.decode irA is inr (Als names)
+      then map (flip cons nil) names
+      else [] in
+    if Decode.decode irQ is inr (QFile _ (Fls dir))
+    then map (app dir) children
+    else []
+  in
+  p <- io_or (io_choose (pathsOf g ++ pathsOf a ++ pathsOf b ++ pls))
+            (gen_many 3 gen_string);;
   c <- gen_string;;
   io_choose [Jexp__Const JSON__Null;
             (jobj "target" target +
