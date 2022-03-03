@@ -75,8 +75,11 @@ Definition read_file (p: path) : IO IR :=
   ret (if oc is Some c then JEncode__String c else JSON__False).
 
 Definition write_file (p: path) (str: content) : IO IR :=
-  i <- command ("echo -n " ++ str ++ " > " ++ flatten p);;
-  ret (if nat_of_int i is O then JSON__True else JSON__False).
+  ot <- catch_any_exc
+         (oc <- open_out (flatten p);;
+          output_string oc str;;
+          close_out oc);;
+  ret (if ot is Some tt then JSON__True else JSON__False).
 
 Arguments Observe__FromServer {_ _ _}.
 Arguments Observe__FromClient {_ _ _}.

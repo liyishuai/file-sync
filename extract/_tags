@@ -1,1 +1,1 @@
-true: package(fileutils,zarith)
+true: package(fileutils,zarith), warn(-D-F)

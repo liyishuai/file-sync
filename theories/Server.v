@@ -61,4 +61,5 @@ Arguments observe  {_ _ _ _ _ _ _ _ _ _}.
 
 Notation failureE := (exceptE string).
 Notation oE Q A S := (observeE Q A S +' failureE).
+#[global]
 Instance oE_Is__oE Q A S : Is__oE Q A S (oE Q A S). Defined.
