@@ -9,23 +9,24 @@ From SimpleIO Require Export
      IO_Float
      IO_Random
      IO_Sys
+     IO_Filename
      SimpleIO.
 From ITreeIO Require Export
      ITreeIO.
 From Coq Require Export
      ExtrOcamlBasic
-     ExtrOcamlIntConv
-     ExtrOcamlNativeString.
+     ExtrOcamlIntConv.
 Import
   ListNotations
   SumNotations
   XNotations
-  OSys.
+  OSys
+  OFilename.
 Open Scope sum_scope.
 
-Parameter ols   : string -> IO (list string).
-Parameter orm   : list string -> IO bool.
-Parameter omkdir: string -> IO bool.
+Parameter ols   : ocaml_string -> IO (list ocaml_string).
+Parameter orm   : list ocaml_string -> IO bool.
+Parameter omkdir: ocaml_string -> IO bool.
 Extract Constant ols =>
   "fun p k -> k (try FileUtil.ls p with 
    _ -> prerr_endline ""ls: error""; [])".
@@ -38,30 +39,8 @@ Extract Constant omkdir =>
    | FileUtil.MkdirError str -> prerr_endline str; false
    | _ -> prerr_endline ""mkdir: error""; false)".
 
-Extract Inductive string => "string"
-[
-(* EmptyString *)
-"(* If this appears, you're using String internals. Please don't *)
-  """"
-"
-(* String *)
-"(* If this appears, you're using String internals. Please don't *)
-  (fun (c, s) -> String.make 1 c ^ s)
-"
-]
-"(* If this appears, you're using String internals. Please don't *)
- (fun f0 f1 s ->
-    let l = String.length s in
-    if l = 0 then f0 () else f1 (String.get s 0) (String.sub s 1 (l-1)))
-".
-Extract Constant to_ostring => "(fun x -> x)".
-Extract Constant from_ostring => "(fun x -> x)".
-
-Parameter obasename: string -> string.
-Extract Constant obasename => "Filename.basename".
-
-Definition flatten: path -> string :=
-  String.concat "/".
+Definition flatten: path -> ocaml_string :=
+  OString.concat dir_sep ∘ map to_ostring.
 
 Definition read_file' (p: path) : IO content :=
   cin <- open_in (flatten p);;
@@ -183,7 +162,7 @@ Definition gen_step (s: gen_state) (t: traceT) : IO jexp :=
 
 Close Scope jexp_scope.
 
-Definition tester_state := unit.
+Definition tester_config := .
 Definition tester_init: IO tester_state :=
   command "rm -rf A B; mkdir A B";;
   UNISON;;
@@ -192,7 +171,7 @@ Definition tester_init: IO tester_state :=
 Definition fileServer   := serverOf qstep initS.
 Definition fileObserver := observe fileServer.
 
-Definition tester (_: tester_state) := interp toClient fileObserver.
+Definition tester := interp toClient fileObserver.
 
 End FileTypes.
 

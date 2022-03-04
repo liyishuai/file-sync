@@ -28,13 +28,15 @@ Arguments other_handler {_}.
 Notation failureE       := (exceptE string).
 Notation tE             := (failureE +' clientE gen_state +' otherE).
 
-Parameter exec_request  : IR -> IO IR.
+Parameter tester_config : Type.
+Parameter tester_init   : IO tester_config.
+Parameter exec_request  : tester_config -> IR -> IO IR.
+Parameter upon_success  : tester_config -> IO unit.
+Parameter upon_failure  : tester_config -> IO unit.
 
 Parameter gen_step      : gen_state -> traceT -> IO jexp.
 
-Parameter tester_state  : Type.
-Parameter tester_init   : IO tester_state.
-Parameter tester        : tester_state -> itree tE void.
+Parameter tester        : itree tE void.
 
 End AsyncTestSIG.
 
@@ -79,8 +81,8 @@ Definition shrink_execute (first_exec : IO (bool * (scriptT * traceT)))
        IO.while_loop (shrink_execute' then_exec) sc;;
        ret false.
 
-Fixpoint execute' {R} (fuel : nat) (oscript : option scriptT)
-         (acc : scriptT * traceT) (m : itree tE R)
+Fixpoint execute' {R} (fuel : nat) (config: tester_config)
+         (oscript : option scriptT) (acc : scriptT * traceT) (m : itree tE R)
   : IO (bool * (scriptT * traceT)) :=
   let (script0, trace0) := acc in
   match fuel with
@@ -88,7 +90,7 @@ Fixpoint execute' {R} (fuel : nat) (oscript : option scriptT)
   | S fuel =>
     match observe m with
     | RetF _ => ret (true, acc)
-    | TauF m' => execute' fuel oscript acc m'
+    | TauF m' => execute' fuel config oscript acc m'
     | VisF e k =>
       match e with
       | (Throw err|) =>
@@ -104,8 +106,8 @@ Fixpoint execute' {R} (fuel : nat) (oscript : option scriptT)
               ret (false, acc)
             | t0::l0 =>
               let label: labelT := fst (last l0 t0) in
-              a <- exec_request q;;
-              execute' fuel oscript (script0, trace0++[(label, a)]) (k a)
+              a <- exec_request config q;;
+              execute' fuel config oscript (script0, trace0++[(label, a)]) (k a)
             end
         | Client__Gen gs =>
           fun k => '(ostep, osc') <-
@@ -121,21 +123,24 @@ Fixpoint execute' {R} (fuel : nat) (oscript : option scriptT)
                  match ostep with
                  | Some ((e, l) as step) =>
                    let req : IR := jexp_to_IR_weak trace0 e in
-                   execute' fuel osc' (script0++[step], trace0++[(l, req)]) (k req)
+                   execute' fuel config osc' (script0++[step],
+                                               trace0++[(l, req)]) (k req)
                  | None =>
                    prerr_endline "Script exhausted";;
                    ret (true, acc)
                  end
         end k
-      | (||oe) => other_handler oe >>= execute' fuel oscript acc ∘ k
+      | (||oe) => other_handler oe >>= execute' fuel config oscript acc ∘ k
       end
     end
   end.
 
-Definition execute {R} (m : tester_state -> itree tE R)
+Definition execute {R} (m : itree tE R)
            (oscript : option scriptT) : IO (bool * (scriptT * traceT)) :=
-  tester_init_state <- tester_init;;
-  execute' 5000 oscript ([], []) (m tester_init_state).
+  config <- tester_init;;
+  result <- execute' 5000 config oscript ([], []) m;;
+  (if fst result : bool then upon_success config else upon_failure config);;
+  ret result.
 
 Definition test : IO bool :=
   shrink_execute (execute tester None)
