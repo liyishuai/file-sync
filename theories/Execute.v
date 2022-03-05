@@ -10,6 +10,7 @@ From SimpleIO Require Export
      IO_Random
      IO_Sys
      IO_Filename
+     IO_Unix
      SimpleIO.
 From ITreeIO Require Export
      ITreeIO.
@@ -120,7 +121,7 @@ Definition UNISON (config: ocaml_string) : IO int :=
 
 Definition tester_init: IO tester_config :=
   base <- get_temp_dir_name;;
-  timestamp <- OFloat.to_string <$> time;;
+  timestamp <- OFloat.to_string <$> OUnix.gettimeofday;;
   let dir := concat base (concat "unison" timestamp) in
   omkdirp (concat dir "A");;
   omkdirp (concat dir "B");;
@@ -148,7 +149,7 @@ Definition exec_request (config: tester_config) (j: IR) : IO IR :=
                                ols (flatten (base ++ p))
     | Fread  p   => read_file (base ++ p)
     | Fwrite p s => write_file (base ++ p) s
-    | Fmkdir p   => JEncode__bool <$> omkdirp (flatten (base ++ p))
+    | Fmkdir p   => JEncode__bool <$> omkdir (flatten (base ++ p))
     | Frm    p   => if p is [] then ret JSON__False else
                      JEncode__bool <$> orm [flatten (base ++ p)]
     end

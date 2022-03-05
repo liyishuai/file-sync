@@ -74,8 +74,10 @@ Fixpoint override (p: path) (m n: node) : node :=
   | f::p, File _ => Directory [(f, override p m $ emptyDir)]
   end.
 
-(* mkdir -p *)
-Fixpoint mkdirp (p: path) (n: node) : option node :=
+(* This is not [mkdir -p] ! It assumes the deepest directory already exists, and
+   only adds entry to that deepest directory.  In comparison, [mkdir -p] adds
+   a chain of entries. *)
+Fixpoint mkdir' (p: path) (n: node) : option node :=
   match p, n with
   | [f], Directory d =>
     match lookup f d with
@@ -85,7 +87,7 @@ Fixpoint mkdirp (p: path) (n: node) : option node :=
     end
   | f::p, Directory d =>
     if lookup f d is Some n
-    then n' <- mkdirp p n;;
+    then n' <- mkdir' p n;;
          Some (Directory $ add f n' d)
     else Some $ Directory $ add f emptyDir d
   | [], Directory _ => Some n
@@ -94,7 +96,7 @@ Fixpoint mkdirp (p: path) (n: node) : option node :=
 
 Definition mkdir (p: path) (n: node) : option node :=
   match cd (dirname p) n, cd p n with
-  | Some (Directory _), None => mkdirp p n
+  | Some (Directory _), None => mkdir' p n
   | _, _ => None
   end.
 

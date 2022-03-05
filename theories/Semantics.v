@@ -17,7 +17,7 @@ Definition fstep (f: F) : state node A :=
       if write p c n is Some n'
       then (n', Ayes) else (n, Ano)
     | Fmkdir p =>
-      if mkdirp p n is Some n'
+      if mkdir p n is Some n'
       then (n', Ayes) else (n, Ano)
     | Frm p =>
       if p is nil then (n, Ano) else
