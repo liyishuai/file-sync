@@ -93,9 +93,10 @@ Fixpoint mkdirp (p: path) (n: node) : option node :=
   end.
 
 Definition mkdir (p: path) (n: node) : option node :=
-  if cd (dirname p) n is Some (Directory _)
-  then mkdirp p n
-  else None.                    (* Parent not found *)   
+  match cd (dirname p) n, cd p n with
+  | Some (Directory _), None => mkdirp p n
+  | _, _ => None
+  end.
 
 Definition write (p: path) (c: content) (n: node) : option node :=
   if p is [] then None else

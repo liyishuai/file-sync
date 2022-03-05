@@ -26,7 +26,6 @@ Open Scope sum_scope.
 
 Parameter ols   : ocaml_string -> IO (list ocaml_string).
 Parameter orm   : list ocaml_string -> IO bool.
-Parameter omkdir: ocaml_string -> IO bool.
 Extract Constant ols =>
   "fun p k -> k (try FileUtil.ls p with 
    _ -> prerr_endline ""ls: error""; [])".
@@ -34,13 +33,19 @@ Extract Constant orm =>
   "fun p k -> k (try FileUtil.rm ~recurse:true p; true with
    | FileUtil.RmError str -> prerr_endline str; true
    | _ -> prerr_endline ""rm: error""; true)".
-Extract Constant omkdir =>
-  "fun p k -> k (try FileUtil.mkdir p; true with
-   | FileUtil.MkdirError str -> prerr_endline str; false
-   | _ -> prerr_endline ""mkdir: error""; false)".
+
+Infix "^" := ostring_app.
+
+Definition omkdirp (dir: ocaml_string) : IO bool :=
+  i <- command ("mkdir -p " ^ quote dir);;
+  ret (int_eqb i int_zero).
+
+Definition omkdir (dir: ocaml_string) : IO bool :=
+  i <- command ("mkdir " ^ quote dir);;
+  ret (int_eqb i int_zero).
 
 Definition flatten: path -> ocaml_string :=
-  OString.concat dir_sep ∘ map to_ostring.
+  flip (fold_left concat) "" ∘ map to_ostring.
 
 Definition read_file' (p: path) : IO content :=
   cin <- open_in (flatten p);;
@@ -98,10 +103,6 @@ Definition toClient T (oe: oE _ _ _ T) : itree tE T :=
 Parameter sleepf : float -> IO unit.
 Extract Constant sleepf => "fun f k -> k (Unix.sleepf f)".
 
-Definition UNISON: IO int :=
-  sleepf (OFloat.Unsafe.of_string "1e-3");;
-  command "unison A B -batch -confirmbigdel=false".
-
 Module FileTypes: AsyncTestSIG.
 
 Definition gen_state := S.
@@ -110,21 +111,44 @@ Definition other_handler {T} (oe: otherE T) : IO T :=
   let 'Log str := oe in
   prerr_endline str.
 
+Definition tester_config := string.
+
+Definition UNISON (config: ocaml_string) : IO int :=
+  (* sleepf (OFloat.Unsafe.of_string "1e-3");; *)
+  command ("unison " ^ (concat config "A") ^ " " ^ (concat config "B") ^
+             " -batch -confirmbigdel=false >> logs.txt").
+
+Definition tester_init: IO tester_config :=
+  base <- get_temp_dir_name;;
+  timestamp <- OFloat.to_string <$> time;;
+  let dir := concat base (concat "unison" timestamp) in
+  omkdirp (concat dir "A");;
+  omkdirp (concat dir "B");;
+  UNISON dir;;
+  ret (from_ostring dir).
+
+Definition upon_success (config: tester_config) : IO unit :=
+  orm [to_ostring config];; ret tt.
+
+Definition upon_failure (config: tester_config) : IO unit :=
+  print_endline config.
+
 Open Scope list_scope.
 
-Definition exec_request (j: IR) : IO IR :=
+Definition exec_request (config: tester_config) (j: IR) : IO IR :=
   match JDecode__Q j with
   | inl str => failwith str
   | inr QSync =>
-    UNISON;;
+    UNISON config;;
     ret JSON__True
   | inr (QFile r f) =>
-    let base: path := if r is R1 then ["A"] else ["B"] in
+    let base: path := if r is R1 then [config; "A"] else [config; "B"] in
     match f with
-    | Fls    p   => JEncode__list ∘ map obasename <$> ols (flatten (base ++ p))
+    | Fls    p   => JEncode__list ∘ map (from_ostring ∘ basename) <$>
+                               ols (flatten (base ++ p))
     | Fread  p   => read_file (base ++ p)
     | Fwrite p s => write_file (base ++ p) s
-    | Fmkdir p   => JEncode__bool <$> omkdir (flatten (base ++ p))
+    | Fmkdir p   => JEncode__bool <$> omkdirp (flatten (base ++ p))
     | Frm    p   => if p is [] then ret JSON__False else
                      JEncode__bool <$> orm [flatten (base ++ p)]
     end
@@ -161,12 +185,6 @@ Definition gen_step (s: gen_state) (t: traceT) : IO jexp :=
              jobj "content" c)].
 
 Close Scope jexp_scope.
-
-Definition tester_config := .
-Definition tester_init: IO tester_state :=
-  command "rm -rf A B; mkdir A B";;
-  UNISON;;
-  ret tt.
 
 Definition fileServer   := serverOf qstep initS.
 Definition fileObserver := observe fileServer.
