@@ -59,7 +59,7 @@ Definition shrink_execute' (exec : scriptT -> IO (bool * traceT))
          (* print_endline (to_string sc);; *)
          '(b, tr) <- exec sc;;
          if b : bool
-         then (* print_endline "===== accepting trace =====";; *)
+         then print_endline ("===== accepting trace ===== " ++ (to_string (length ss')))%string;;
               (* print_endline (to_string tr);; *)
               shrink_rec ss'
          else print_endline "<<<<< rejecting trace >>>>>";;
