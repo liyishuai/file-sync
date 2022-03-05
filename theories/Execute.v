@@ -179,7 +179,7 @@ Definition gen_step (s: gen_state) (t: traceT) : IO jexp :=
   p <- io_or (io_choose (pathsOf g ++ pathsOf a ++ pathsOf b ++ pls))
             (gen_many 3 gen_string);;
   c <- gen_string;;
-  io_choose [Jexp__Const JSON__Null;
+  io_choose [Jexp__Const (JSON__String "sync");
             (jobj "target" target +
              jobj "method" method +
              jobj "path"    p     +

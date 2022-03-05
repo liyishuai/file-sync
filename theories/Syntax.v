@@ -118,7 +118,9 @@ Instance JDecode__Q: JDecode Q :=
            | _ => inl $ "Invalid method: " ++ m
            end);;
     inr (QFile r f))%string
-    <|> (JDecode__unit j;; inr QSync).
+    <|> (str <- JDecode__string j;;
+         if str is "sync" then inr QSync
+         else inl $ "Invalid query: " ++ str).
 
 #[export]
 Instance JEncode__F: JEncode F :=
@@ -135,7 +137,7 @@ Instance JEncode__F: JEncode F :=
 Instance JEncode__Q: JEncode Q :=
   fun q =>
     match q with
-    | QSync => JSON__Null
+    | QSync => JSON__String "sync"
     | QFile r f =>
       jobj "target" (if r is R1 then 1 else 2) + JEncode__F f
     end.
