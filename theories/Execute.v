@@ -152,8 +152,7 @@ Definition exec_request (config: tester_config) (j: IR) : IO IR :=
   match JDecode__Q j with
   | inl str => failwith str
   | inr QSync =>
-    UNISON config;;
-    ret JSON__True
+    JSON__Number ∘ z_of_int <$> UNISON config
   | inr (QFile r f) =>
     let base: path := if r is R1 then [config; "A"] else [config; "B"] in
     match f with

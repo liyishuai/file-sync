@@ -35,4 +35,4 @@ Definition qstep (q: Q) : state S A :=
          else
            let (r2', a) := fstep f r2 in
            (g, r1, r2', a)
-    else (recon g r1 r2, Ayes).
+    else (recon g r1 r2, Aret BinInt.Z0).

@@ -24,6 +24,7 @@ Variant F :=
 Variant A :=
   Als   (l: list name)
 | Aread (c: content)
+| Aret  (z: Z)
 | Ayes
 | Ano.
 
@@ -36,11 +37,15 @@ Variant Q :=
 Definition S : Type := node * node * node.
 Definition initS: S := (emptyDir, emptyDir, emptyDir).
 
+Global Instance RelDec_Z: RelDec (@eq Z) :=
+  { rel_dec := Z.eqb }.
+
 #[export]
 Instance RelDec_A : RelDec (@eq A) :=
   { rel_dec a b :=
       match a, b with
       | Als x, Als y => subset x y &&& subset y x
+      | Aret  x, Aret  y
       | Aread x, Aread y => x ?[ eq ] y
       | Ayes   , Ayes
       | Ano    , Ano     => true
@@ -55,6 +60,7 @@ Instance Serialize__A: Serialize A :=
   fun a => match a with
          | Als   l => to_sexp l
          | Aread c => to_sexp c
+         | Aret  z => Atom z
          | Ayes    => Atom "yes"
          | Ano     => Atom "no"
          end.
@@ -84,6 +90,7 @@ Close Scope sexp_scope.
 Instance JDecode__A: JDecode A :=
   fun j =>
     (b <- JDecode__bool j;; inr (if b : bool then Ayes else Ano))
+      <|> Aret  <$> JDecode__Z      j
       <|> Aread <$> JDecode__string j
       <|> Als   <$> decode__list    j.
 
