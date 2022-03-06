@@ -40,7 +40,7 @@ Parameter omkdir  : ocaml_string -> IO bool.
 Extract Constant omkdirp =>
           "fun p k -> k (try FileUtil.mkdir ~parent:true p; true with _ -> false)".
 Extract Constant omkdir =>
-          "fun p k -> k (try Sys.mkdir p 0x755; true with _ -> false)".
+          "fun p k -> k (try Sys.mkdir p 0o755; true with _ -> false)".
 
 (* Definition omkdirp (dir: ocaml_string) : IO bool := *)
 (*   i <- command ("mkdir -p " ^ quote dir);; *)
@@ -151,8 +151,7 @@ Open Scope list_scope.
 Definition exec_request (config: tester_config) (j: IR) : IO IR :=
   match JDecode__Q j with
   | inl str => failwith str
-  | inr QSync =>
-    JSON__Number ∘ z_of_int <$> UNISON config
+  | inr QSync => JSON__Number ∘ z_of_int <$> UNISON config
   | inr (QFile r f) =>
     let base: path := if r is R1 then [config; "A"] else [config; "B"] in
     match f with
