@@ -53,23 +53,26 @@ Extract Constant omkdir =>
 Definition flatten: path -> ocaml_string :=
   flip (fold_left concat) "" ∘ map to_ostring.
 
-Definition read_file' (p: path) : IO content :=
-  cin <- open_in (flatten p);;
+Definition read_file' (cin: in_channel) : IO content :=
   len <- in_channel_length cin;;
   ostr <- really_input_string cin len;;
-  close_in_noerr cin;;
   ret (from_ostring ostr).
 
 Definition read_file (p: path) : IO IR :=
-  oc <- catch_any_exc (read_file' p);;
-  ret (if oc is Some c then JEncode__String c else JSON__False).
+  ocin <- catch_any_exc (open_in (flatten p));;
+  if ocin is Some cin then
+    oc <- catch_any_exc (read_file' cin);;
+    close_in_noerr cin;;
+    ret (if oc is Some c then JSON__String c else JSON__False)
+  else ret JSON__False.
 
 Definition write_file (p: path) (str: content) : IO IR :=
-  ot <- catch_any_exc
-         (oc <- open_out (flatten p);;
-          output_string oc str;;
-          close_out oc);;
-  ret (if ot is Some tt then JSON__True else JSON__False).
+  ooc <- catch_any_exc (open_out (flatten p));;
+  if ooc is Some oc
+  then ot <- catch_any_exc (output_string oc str);;
+       close_out_noerr oc;;
+       ret (if ot is Some tt then JSON__True else JSON__False)
+  else ret JSON__False.
 
 Arguments Observe__FromServer {_ _ _}.
 Arguments Observe__FromClient {_ _ _}.
