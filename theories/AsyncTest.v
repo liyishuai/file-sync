@@ -54,7 +54,7 @@ Definition shrink_execute' (exec : scriptT -> IO (bool * traceT))
        match ss with
        | [] => print_endline "<<<<< shrink exhausted >>>>";; ret None
        | sc :: ss' =>
-         prerr_endline (to_string (List.length ss'));;
+         (* prerr_endline (to_string (List.length ss'));; *)
          (* print_endline "<<<<< current script >>>>>>";; *)
          (* print_endline (to_string sc);; *)
          '(b, tr) <- exec sc;;
@@ -126,7 +126,7 @@ Fixpoint execute' {R} (fuel : nat) (config: tester_config)
                    execute' fuel config osc' (script0++[step],
                                                trace0++[(l, req)]) (k req)
                  | None =>
-                   prerr_endline "Script exhausted";;
+                   (* prerr_endline "Script exhausted";; *)
                    ret (true, acc)
                  end
         end k

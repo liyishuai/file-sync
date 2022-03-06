@@ -123,8 +123,10 @@ Infix "^" := ostring_app.
 
 Definition UNISON (config: ocaml_string) : IO int :=
   (* sleepf (OFloat.Unsafe.of_string "1e-3");; *)
-  command ("unison " ^ (concat config "A") ^ " " ^ (concat config "B") ^
-   " -batch -confirmbigdel=false -debug files -debug props -debug copy -debug exn -debug remote+ >> logs.txt").
+  command ("unison " ^ (concat config "A") ^ " " ^ (concat config "B")
+          ^ " -batch -confirmbigdel=false " ^
+          "-debug files -debug props -debug copy -debug exn -debug remote+ >> "
+          ^ (concat config "logs.txt") ^ " 2>> " ^ (concat config "error.txt")).
 
 Definition tester_init: IO tester_config :=
   base <- get_temp_dir_name;;
