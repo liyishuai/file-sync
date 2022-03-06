@@ -1,20 +1,28 @@
-all: Makefile.coq
-	@+$(MAKE) -f Makefile.coq all
+COQMAKEFILE?=Makefile.coq
+EXE?=FileTest.native
+INSTALLDIR?=$(shell opam var bin)
+
+all: $(COQMAKEFILE)
+	@+$(MAKE) -f $< $@
 	@+$(MAKE) -C extract
 
-clean: Makefile.coq
-	@+$(MAKE) -f Makefile.coq cleanall
-	@rm -f Makefile.coq Makefile.coq.conf
+clean: $(COQMAKEFILE)
+	@+$(MAKE) -f $< cleanall
+	@rm -f $< $<.conf
 
-Makefile.coq: _CoqProject
-	$(COQBIN)coq_makefile -f _CoqProject -o Makefile.coq
+$(COQMAKEFILE): _CoqProject
+	$(COQBIN)coq_makefile -f _CoqProject -o $@
 
 force _CoqProject Makefile: ;
 
-%: Makefile.coq force
-	@+$(MAKE) -f Makefile.coq $@
+%: $(COQMAKEFILE) force
+	@+$(MAKE) -f $< $@
 
 .PHONY: all clean force
 
 test: all
 	$(MAKE) -C extract test
+
+install: $(COQMAKEFILE)
+	@+$(MAKE) -f $^ $@
+	install extract/$(EXE) $(INSTALLDIR)
