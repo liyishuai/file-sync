@@ -25,6 +25,7 @@ Coq formalisation of the Unison file synchroniser
   - [AsyncTest](https://github.com/liyishuai/coq-async-test)
   - [OCamlbuild](https://github.com/ocaml/ocamlbuild)
   - [Fileutils](https://github.com/gildor478/ocaml-fileutils)
+  - [Unison](https://www.cis.upenn.edu/~bcpierce/unison/)
 - Coq namespace: `FileSync`
 - Related publication(s): none
 

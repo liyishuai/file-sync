@@ -29,7 +29,13 @@ dependencies:
   - description: '[Fileutils](https://github.com/gildor478/ocaml-fileutils)'
     opam:
       name: fileutils
+  - description: '[Unison](https://www.cis.upenn.edu/~bcpierce/unison/)'
+    opam:
+      name: unison
+      version: '{ with-test }'
 action: true
 tested_coq_opam_versions:
   - version: '8.15-ocaml-4.12-flambda'
   - version: '8.14-ocaml-4.12-flambda'
+test_target: test
+install_flag: 'INSTALLDIR=%{bin}%'

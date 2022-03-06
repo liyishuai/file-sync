@@ -15,13 +15,15 @@ description: """
 Coq formalisation of the Unison file synchroniser"""
 
 build: [make "-j%{jobs}%"]
-install: [make "install"]
+run-test: [make "-j%{jobs}%" "test"]
+install: [make "install" "INSTALLDIR=%{bin}%"]
 depends: [
   "ocaml" { >= "4.07" }
   "coq" { >= "8.14~" }
   "coq-async-test" 
   "ocamlbuild" 
   "fileutils" 
+  "unison" { with-test }
 ]
 
 tags: [
