@@ -17,8 +17,8 @@ supported_coq_versions:
   text: 8.14 or later
   opam: '{ >= "8.14~" }'
 supported_ocaml_versions:
-  text: 4.07 or later
-  opam: '{ >= "4.07" }'
+  text: 4.12 or later
+  opam: '{ >= "4.12" }'
 dependencies:
   - description: '[AsyncTest](https://github.com/liyishuai/coq-async-test)'
     opam:

@@ -20,7 +20,7 @@ Coq formalisation of the Unison file synchroniser
   - Yishuai Li
 - License: [Mozilla Public License 2.0](LICENSE)
 - Compatible Coq versions: 8.14 or later
-- Compatible OCaml versions: 4.07 or later
+- Compatible OCaml versions: 4.12 or later
 - Additional dependencies:
   - [AsyncTest](https://github.com/liyishuai/coq-async-test)
   - [OCamlbuild](https://github.com/ocaml/ocamlbuild)
