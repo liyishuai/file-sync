@@ -47,8 +47,8 @@ Notation scriptT := (list (jexp * labelT)).
 
 Definition shrink_execute' (exec : scriptT -> IO (bool * traceT))
            (init : scriptT) : IO (option scriptT) :=
-  print_endline "===== initial script =====";;
-  print_endline (to_string init);;
+  (* print_endline "===== initial script =====";; *)
+  (* print_endline (to_string init);; *)
   IO.fix_io
     (fun shrink_rec ss =>
        match ss with
@@ -59,7 +59,7 @@ Definition shrink_execute' (exec : scriptT -> IO (bool * traceT))
          (* print_endline (to_string sc);; *)
          '(b, tr) <- exec sc;;
          if b : bool
-         then print_endline ("===== accepting trace ===== " ++ (to_string (length ss')))%string;;
+         then (* print_endline ("===== accepting trace ===== " ++ (to_string (length ss')))%string;; *)
               (* print_endline (to_string tr);; *)
               shrink_rec ss'
          else print_endline "<<<<< rejecting trace >>>>>";;
@@ -94,7 +94,7 @@ Fixpoint execute' {R} (fuel : nat) (config: tester_config)
     | VisF e k =>
       match e with
       | (Throw err|) =>
-        print_endline err;;
+        print_endline (String "010" "ERR: " ++ err)%string;;
         ret (false, acc)
       | (|ce|) =>
         match ce in clientE _ Y return (Y -> _) -> _ with

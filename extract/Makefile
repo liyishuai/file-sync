@@ -17,3 +17,7 @@ clean: $(COQMAKEFILE)
 	$(MAKE) $(COQMAKEFILE)
 	$(MAKE) -f $(COQMAKEFILE) $*.vo
 	ocamlbuild -use-ocamlfind $@
+
+test: $(BINS)
+	$(RM) logs.txt
+	./FileTest.native 2> error.txt

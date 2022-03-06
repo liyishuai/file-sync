@@ -15,3 +15,6 @@ force _CoqProject Makefile: ;
 	@+$(MAKE) -f Makefile.coq $@
 
 .PHONY: all clean force
+
+test: all
+	$(MAKE) -C extract test

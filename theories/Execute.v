@@ -35,15 +35,20 @@ Extract Constant orm =>
    | FileUtil.RmError str -> prerr_endline str; true
    | _ -> prerr_endline ""rm: error""; true)".
 
-Infix "^" := ostring_app.
+Parameter omkdirp : ocaml_string -> IO bool.
+Parameter omkdir  : ocaml_string -> IO bool.
+Extract Constant omkdirp =>
+          "fun p k -> k (try FileUtil.mkdir ~parent:true p; true with _ -> false)".
+Extract Constant omkdir =>
+          "fun p k -> k (try Sys.mkdir p 0x755; true with _ -> false)".
 
-Definition omkdirp (dir: ocaml_string) : IO bool :=
-  i <- command ("mkdir -p " ^ quote dir);;
-  ret (int_eqb i int_zero).
+(* Definition omkdirp (dir: ocaml_string) : IO bool := *)
+(*   i <- command ("mkdir -p " ^ quote dir);; *)
+(*   ret (int_eqb i int_zero). *)
 
-Definition omkdir (dir: ocaml_string) : IO bool :=
-  i <- command ("mkdir " ^ quote dir);;
-  ret (int_eqb i int_zero).
+(* Definition omkdir (dir: ocaml_string) : IO bool := *)
+(*   i <- command ("mkdir " ^ quote dir);; *)
+(*   ret (int_eqb i int_zero). *)
 
 Definition flatten: path -> ocaml_string :=
   flip (fold_left concat) "" ∘ map to_ostring.
@@ -114,10 +119,12 @@ Definition other_handler {T} (oe: otherE T) : IO T :=
 
 Definition tester_config := string.
 
+Infix "^" := ostring_app.
+
 Definition UNISON (config: ocaml_string) : IO int :=
   (* sleepf (OFloat.Unsafe.of_string "1e-3");; *)
   command ("unison " ^ (concat config "A") ^ " " ^ (concat config "B") ^
-             " -batch -confirmbigdel=false >> logs.txt").
+   " -batch -confirmbigdel=false -debug files -debug props -debug copy -debug exn -debug remote+ >> logs.txt").
 
 Definition tester_init: IO tester_config :=
   base <- get_temp_dir_name;;
@@ -132,7 +139,7 @@ Definition upon_success (config: tester_config) : IO unit :=
   orm [to_ostring config];; ret tt.
 
 Definition upon_failure (config: tester_config) : IO unit :=
-  print_endline config.
+  print_endline ("DIR: " ++ config).
 
 Open Scope list_scope.
 
@@ -180,10 +187,12 @@ Definition gen_step (s: gen_state) (t: traceT) : IO jexp :=
             (gen_many 3 gen_string);;
   c <- gen_string;;
   io_choose [Jexp__Const (JSON__String "sync");
-            (jobj "target" target +
+             jobj "target" target +
              jobj "method" method +
-             jobj "path"    p     +
-             jobj "content" c)].
+             if method is "write"
+             then jobj "path" p + jobj "content" c
+             else jobj "path" p
+    ].
 
 Close Scope jexp_scope.
 
