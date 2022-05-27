@@ -20,6 +20,8 @@ From Coq Require Export
 Import
   ListNotations
   SumNotations
+  Operator
+  JNotations
   XNotations
   OSys
   OFilename.
@@ -80,12 +82,12 @@ Arguments Observe__FromClient {_ _ _}.
 Variant logE : Type -> Set :=
   Log: string -> logE unit.
 
-Class Is__tE E `{failureE -< E} `{clientE S -< E} `{logE -< E}.
-Notation tE := (failureE +' clientE S +' logE).
+Class Is__tE E `{failureE -< E}`{clientE S -< E} `{nondetE -< E}  `{logE -< E}.
+Notation tE := (failureE +' clientE S +' nondetE +' logE).
 #[export]
 Instance tE_Is__tE: Is__tE tE. Defined.
 
-Definition toClient T (oe: oE _ _ _ T) : itree tE T :=
+Definition toClient {E} `{Is__tE E} T (oe: oE _ _ _ T) : itree E T :=
   match oe with
   | (oe|) =>
     match oe in observeE _ _ _ T return _ T with
@@ -106,8 +108,65 @@ Definition toClient T (oe: oE _ _ _ T) : itree tE T :=
       | inr q => ret q
       end
     end
-  | (|Throw str) => throw str
+  | (|ne|) =>
+      match ne in nondetE T return _ T with
+      | Or => trigger Or
+      end
+  | (||Throw str) => throw str
   end.
+
+Open Scope json_scope.
+
+CoFixpoint expect {R X} (e0: clientE S R) (r: R) (m: itree tE X) : itree tE X :=
+  match observe m with
+  | RetF x => Ret x
+  | TauF m' => Tau (expect e0 r m')
+  | VisF e k =>
+      match e with
+      | (|ce|) =>
+          match e0, ce with
+          | Client__Exec q0, Client__Exec q =>
+              if q0 =? q then id
+              else fun _ _ => throw "Unexpected event"
+          | Client__Gen _, Client__Gen _ => id
+          | _, _ => fun _ _ => throw "Unexpected event"
+          end k r
+      | _ => vis e (expect e0 r ∘ k)
+      end
+  end.
+
+Definition match_observe {R T} (e: clientE S R) (r: R)
+  : list (itree tE T) -> list (itree tE T) :=
+  map (expect e r).
+
+CoFixpoint backtrack' {T} (others: list (itree tE T)) (m: itree tE T)
+  : itree tE T :=
+  match observe m with
+  | RetF r => Ret r
+  | TauF m' => Tau (backtrack' others m')
+  | VisF e k =>
+      match e with
+      | (Throw str|) =>
+          if others is other::others'
+          then embed Log ("Retry upon " ++ str);;
+               Tau (backtrack' others' other)
+          else throw str
+      | (|ce|) => r <- trigger ce;;
+                 Tau (backtrack' (match_observe ce r others) (k r))
+      | (||ne|) =>
+          match ne in nondetE Y return (Y -> _) -> _ with
+          | Or => fun k => b <- trigger Or;;
+                        Tau (backtrack' ((k (negb b))::others) (k b))
+          end k
+      | (|||le) =>
+          match le in logE Y return (Y -> _) -> _ with
+          | Log str => fun k => embed Log str;;
+                             Tau (backtrack' others (k tt))
+          end k
+      end
+  end.
+
+Definition backtrack {T} : itree tE T -> itree tE T := backtrack' [].
 
 Parameter sleepf : float -> IO unit.
 Extract Constant sleepf => "fun f k -> k (Unix.sleepf f)".
@@ -115,10 +174,16 @@ Extract Constant sleepf => "fun f k -> k (Unix.sleepf f)".
 Module FileTypes: AsyncTestSIG.
 
 Definition gen_state := S.
-Definition otherE := logE.
+Definition otherE := nondetE +' logE.
 Definition other_handler {T} (oe: otherE T) : IO T :=
-  let 'Log str := oe in
-  prerr_endline str.
+  match oe with
+  | (ne|) =>
+      let 'Or := ne in
+      ORandom.bool tt
+  | (|le) =>
+      let 'Log str := le in
+      prerr_endline str
+  end.
 
 Definition tester_config := string.
 
@@ -127,9 +192,12 @@ Infix "^" := ostring_app.
 Definition UNISON (config: ocaml_string) : IO int :=
   (* sleepf (OFloat.Unsafe.of_string "1e-3");; *)
   command ("unison " ^ (concat config "A") ^ " " ^ (concat config "B")
-          ^ " -batch -confirmbigdel=false " ^
-          "-debug files -debug props -debug copy -debug exn -debug remote+ >> "
-          ^ (concat config "logs.txt") ^ " 2>> " ^ (concat config "error.txt")).
+          ^ " -batch -confirmbigdel=false "
+          (* ^ "-debug files -debug props -debug copy -debug exn -debug remote+" *)
+          ^ "-silent"
+          ^ " >> " ^ (concat config "logs.txt")
+          ^ " 2>> " ^ (concat config "error.txt")
+          ).
 
 Definition tester_init: IO tester_config :=
   base <- get_temp_dir_name;;
@@ -199,10 +267,16 @@ Definition gen_step (s: gen_state) (t: traceT) : IO jexp :=
 
 Close Scope jexp_scope.
 
-Definition fileServer   := serverOf qstep initS.
-Definition fileObserver := observe fileServer.
+Definition fileServer {E} `{serverE Q A S -< E} : itree E void :=
+  serverOf qstep initS.
+Definition fileObserver := Server.observe fileServer.
 
-Definition tester := interp toClient fileObserver.
+Definition fileServerT  := serverOfT qstept initS.
+Definition fileObserverT := Server.observe fileServerT.
+
+(* Definition tester := backtrack $ interp toClient fileObserver. *)
+
+Definition tester := backtrack $ interp toClient fileObserverT.
 
 End FileTypes.
 

@@ -19,4 +19,4 @@ clean: $(COQMAKEFILE)
 	ocamlbuild -use-ocamlfind $@
 
 test: $(BINS)
-	./FileTest.native
+	./FileTest.native 2> test.log

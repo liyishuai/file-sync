@@ -51,7 +51,7 @@ Fixpoint cd (p: path) (n: node) : option node :=
   match p, n with
   | f::p, Directory d => lookup f d >>= cd p
   | [], _ => Some n
-  | _ , _ => None
+  | _::_, File _ => None
   end.
 
 Definition ls (p: path) (n: node) : list name :=

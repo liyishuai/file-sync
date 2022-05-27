@@ -1,3 +1,5 @@
+From ExtLib Require Export
+     ListSet.
 From FileSync Require Export
      File.
 Export
@@ -12,8 +14,47 @@ Definition dirty (g s: node) (p: path) : bool :=
   | _     , _      => true
   end.
 
-Definition replace (p: path) (s: node) : node -> node :=
-  if cd p s is Some n then override p n else rmf p.
+Definition dirtyPaths (g s: node) : list path :=
+  List.filter (dirty g s) $ lset_union (list_eqb _) (pathsOf g) (pathsOf s).
+
+Definition allPaths (g a b: node) : list path :=
+  lset_union (list_eqb _) (dirtyPaths g a) (dirtyPaths g b).
+
+Definition ssrecon (gab: node * node * node) (p: path) : node * node * node :=
+  let '(g, a, b) := gab in
+  match cd p g, cd p a, cd p b with
+  | Some gp, Some ap, Some bp =>
+      if ap =? gp
+      then (override p bp g, override p bp a, b)
+      else
+        if bp =? gp
+        then (override p ap g, a, override p ap b)
+        else
+          if ap =? bp
+          then (override p ap g, a, b)
+          else gab
+  | None, Some ap, Some bp =>
+      if ap =? bp
+      then (override p ap g, a, b)
+      else gab
+  | Some gp, Some ap, None =>
+      if ap =? gp
+      then (rmf p g, rmf p a, b)
+      else gab
+  | Some gp, None, Some bp =>
+      if bp =? gp
+      then (rmf p g, a, rmf p b)
+      else gab
+  | None, None, Some bp =>
+      (override p bp g, override p bp a, b)
+  | None, Some ap, None =>
+      (override p ap g, a, override p ap b)
+  | _, None, None =>
+      (rmf p g, a, b)
+  end.
+
+Definition reconset : list path -> node * node * node -> node * node * node :=
+  fold_left ssrecon.
 
 Program Fixpoint recon (g a b: node) {measure (size g)} : node * node * node :=
   if a =? g
@@ -74,3 +115,7 @@ Next Obligation.
   intuition.
   eapply size_subdir; eauto.
 Defined.
+
+Lemma recon_alt (g a b: node) :
+  recon g a b = reconset (allPaths g a b) (g, a, b).
+Abort.
