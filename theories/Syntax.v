@@ -45,10 +45,7 @@ Instance RelDec_A : RelDec (@eq A) :=
   { rel_dec a b :=
       match a, b with
       | Als x, Als y => subset x y &&& subset y x
-      | Aret x, Aret y =>
-          let x' := if x is 1 then 0 else x in
-          let y' := if y is 1 then 0 else y in
-          x' ?[ eq ] y'         (* Temporarily treat 1 as 0 *)
+      | Aret x, Aret y
       | Aread x, Aread y => x ?[ eq ] y
       | Ayes   , Ayes
       | Ano    , Ano     => true

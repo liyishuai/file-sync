@@ -57,6 +57,9 @@ Definition qstept E `(nondetE -< E) (q: Q) : stateT S (itree E) A :=
            let (r2', a) := fstep f r2 in
            ret (g, r1, r2', a)
     else
-      let pps := power (allPaths g r1 r2) in
-      ps <- choose1 [] pps;;
-      ret (reconset ps gab, Aret BinInt.Z0).
+      let aps := allPaths g r1 r2 in
+      ps <- choose1 aps (power aps);;
+      if lset_subset (list_eqb _) aps ps
+      then ret (recon g r1 r2, Aret BinInt.Z0)
+      else r <- choose1 BinInt.Z.one [BinInt.Z.two];;
+           ret (reconset ps gab, Aret r).

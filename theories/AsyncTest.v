@@ -138,7 +138,7 @@ Fixpoint execute' {R} (fuel : nat) (config: tester_config)
 Definition execute {R} (m : itree tE R)
            (oscript : option scriptT) : IO (bool * (scriptT * traceT)) :=
   config <- tester_init;;
-  result <- execute' 5000 config oscript ([], []) m;;
+  result <- execute' 50000 config oscript ([], []) m;;
   (if fst result : bool then upon_success config else upon_failure config);;
   ret result.
 
