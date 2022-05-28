@@ -1,5 +1,6 @@
 -Q theories FileSync
 -arg -w -arg -notation-overridden
+-native-compiler no
 theories/File.v
 theories/Sync.v
 theories/Syntax.v

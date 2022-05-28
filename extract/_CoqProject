@@ -1,3 +1,4 @@
 -Q ../theories FileSync
 -arg -w -arg -notation-overridden
+-native-compiler no
 FileTest.v

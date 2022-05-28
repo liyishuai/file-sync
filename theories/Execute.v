@@ -271,7 +271,7 @@ Definition fileServer {E} `{serverE Q A S -< E} : itree E void :=
   serverOf qstep initS.
 Definition fileObserver := Server.observe fileServer.
 
-Definition fileServerT  := serverOfT qstept initS.
+Definition fileServerT: itree (sE _ _ _) _ := serverOfT qstept initS.
 Definition fileObserverT := Server.observe fileServerT.
 
 (* Definition tester := backtrack $ interp toClient fileObserver. *)
