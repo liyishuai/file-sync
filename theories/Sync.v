@@ -119,3 +119,11 @@ Defined.
 Lemma recon_alt (g a b: node) :
   recon g a b = reconset (allPaths g a b) (g, a, b).
 Abort.
+
+Definition conflict (g a b: node) (p: path) : bool :=
+  let '(_, a', b') := recon g a b in
+  match cd p a', cd p b' with
+  | Some ap, Some bp => negb $ ap =? bp
+  | None, None => false
+  | _, _ => true
+  end.

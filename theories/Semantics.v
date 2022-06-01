@@ -46,6 +46,8 @@ Fixpoint power {A} (l: list A) : list (list A) :=
        p ++ map (cons a) p
   else [[]].
 
+Local Open Scope file_scope.
+
 Definition qstept E `(nondetE -< E) (q: Q) : stateT S (itree E) A :=
   fun gab =>
     let '(g, r1, r2) := gab in
@@ -59,7 +61,8 @@ Definition qstept E `(nondetE -< E) (q: Q) : stateT S (itree E) A :=
     else
       let aps := allPaths g r1 r2 in
       ps <- choose1 aps (power aps);;
-      if lset_subset (list_eqb _) aps ps
-      then ret (recon g r1 r2, Aret BinInt.Z0)
-      else r <- choose1 BinInt.Z.one [BinInt.Z.two];;
-           ret (reconset ps gab, Aret r).
+      let '(g', r1', r2') as gab' := reconset ps gab in
+      if existsb (conflict g r1 r2) ps
+      then r <- choose1 BinInt.Z.one [BinInt.Z.two];;
+           ret (gab', Aret r)
+      else ret (gab', Aret $ if r1' =? r2' then BinInt.Z0 else BinInt.Z.one).
