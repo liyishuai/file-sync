@@ -26,3 +26,7 @@ test: all
 install: $(COQMAKEFILE)
 	@+$(MAKE) -f $^ $@
 	install extract/$(EXE) $(INSTALLDIR)
+
+publish%:
+	opam publish --packages-directory=released/packages \
+		--repo=coq/opam-coq-archive --tag=v$* -v $* liyishuai/file-sync

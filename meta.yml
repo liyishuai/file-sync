@@ -6,12 +6,12 @@ synopsis: File synchroniser specification in Coq
 description: Coq formalisation of the Unison file synchroniser
 authors:
   - name: Yishuai Li
-    email: yishuai@cis.upenn.edu
+    email: liyishuai.lys@alibaba-inc.com
 license:
   fullname: Mozilla Public License 2.0
   identifier: MPL-2.0
 namespace: FileSync
-opam-file-maintainer: 'Yishuai Li <yishuai@cis.upenn.edu>'
+opam-file-maintainer: 'Yishuai Li <liyishuai.lys@alibaba-inc.com>'
 ci_extra_dev: true
 supported_coq_versions:
   text: 8.14 or later
@@ -35,8 +35,8 @@ dependencies:
       version: '{ with-test }'
 action: true
 tested_coq_opam_versions:
-  - version: '8.15-ocaml-4.12-flambda'
-  - version: '8.14-ocaml-4.12-flambda'
+  - version: '8.15-ocaml-4.14-flambda'
+  - version: '8.14-ocaml-4.14-flambda'
 test_target: test
 install_flag: 'INSTALLDIR=%{bin}%'
 build: |
