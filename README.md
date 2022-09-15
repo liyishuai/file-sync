@@ -22,6 +22,7 @@ Coq formalisation of the Unison file synchroniser
 - Compatible Coq versions: 8.14 or later
 - Compatible OCaml versions: 4.12 or later
 - Additional dependencies:
+  - [SimpleIO](https://github.com/Lysxia/coq-simple-io)
   - [AsyncTest](https://github.com/liyishuai/coq-async-test)
   - [OCamlbuild](https://github.com/ocaml/ocamlbuild)
   - [Fileutils](https://github.com/gildor478/ocaml-fileutils)
@@ -36,7 +37,6 @@ is via [OPAM](https://opam.ocaml.org/doc/Install.html):
 
 ```shell
 opam repo add coq-released https://coq.inria.fr/opam/released
-opam repo add coq-extra-dev https://coq.inria.fr/opam/extra-dev
 opam install coq-file-sync
 ```
 
@@ -45,7 +45,7 @@ To instead build and install manually, do:
 ``` shell
 git clone https://github.com/liyishuai/file-sync.git
 cd file-sync
-make   # or make -j <number-of-cores-on-your-machine>
+make   # or make -j <number-of-cores-on-your-machine> 
 make install
 ```
 
