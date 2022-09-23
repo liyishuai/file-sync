@@ -17,8 +17,8 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'coqorg/coq:dev-ocaml-4.14-flambda'
-          - 'coqorg/coq:8.16-ocaml-4.14-flambda'
+          - 'coqorg/coq:dev'
+          - 'coqorg/coq:8.16'
           - 'coqorg/coq:8.15-ocaml-4.14-flambda'
           - 'coqorg/coq:8.14-ocaml-4.14-flambda'
       fail-fast: false
@@ -33,6 +33,9 @@ jobs:
               opam repo -a --set-default add coq-extra-dev https://coq.inria.fr/opam/extra-dev
               opam config list; opam repo list; opam list
             endGroup
+          export: 'OPAMWITHTEST'
+        env:
+          OPAMWITHTEST: true
 
 # See also:
 # https://github.com/coq-community/docker-coq-action#readme

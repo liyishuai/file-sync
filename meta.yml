@@ -38,9 +38,13 @@ dependencies:
       name: unison
       version: '{ with-test }'
 action: true
+action_appendix: |2-
+            export: 'OPAMWITHTEST'
+          env:
+            OPAMWITHTEST: true
 tested_coq_opam_versions:
-  - version: 'dev-ocaml-4.14-flambda'
-  - version: '8.16-ocaml-4.14-flambda'
+  - version: 'dev'
+  - version: '8.16'
   - version: '8.15-ocaml-4.14-flambda'
   - version: '8.14-ocaml-4.14-flambda'
 test_target: test
