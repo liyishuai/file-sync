@@ -6,7 +6,7 @@ synopsis: File synchroniser specification in Coq
 description: Coq formalisation of the Unison file synchroniser
 authors:
   - name: Yishuai Li
-    email: liyishuai.lys@alibaba-inc.com
+    email: yishuai.li@pingcap.com
 license:
   fullname: Mozilla Public License 2.0
   identifier: MPL-2.0
@@ -43,9 +43,16 @@ action_appendix: |2-
           env:
             OPAMWITHTEST: true
 tested_coq_opam_versions:
-  - version: 'dev'
+  - version: '8.20'
+  - version: '8.19'
+  - version: '8.18'
+  - version: '8.17'
   - version: '8.16'
   - version: '8.15-ocaml-4.14-flambda'
   - version: '8.14-ocaml-4.14-flambda'
+tested_rocq_opam_versions:
+  - version: 'dev'
+  - version: '9.1'
+  - version: '9.0'
 test_target: test
 install_flag: 'INSTALLDIR=%{bin}%'
