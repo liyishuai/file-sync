@@ -135,38 +135,47 @@ Lemma fold_left_plus : forall l n,
 Proof.
   induction l; intuition.
   simpl.
-  apply Nat.le_trans with (n + a); intuition.
+  apply Nat.le_trans with (n + a).
+  - apply Nat.le_add_r.
+  - apply IHl.
 Qed.
 
 Lemma fold_left_plus_linear : forall l n m,
     n <= m ->
     fold_left plus l n <= fold_left plus l m.
 Proof.
-  induction l; intuition.
-  simpl.
-  apply IHl.
-  intuition.
+  induction l as [|a l IHl]; intros n m Hle.
+  - exact Hle.
+  - simpl.
+    apply IHl.
+    apply Nat.add_le_mono_r.
+    exact Hle.
 Qed.
 
 Lemma size_subdir (f: name) (n: node) (d: mapping) :
   In (f, n) d ->
   size n < size (Directory d).
 Proof.
-  intro.
-  induction d; intuition.
-  unfold In in H.
-  fold (In (f, n) d) in H.
-  intuition.
-  - subst.
+  intro Hin.
+  induction d as [|[f' n'] d IHd].
+  - inversion Hin.
+  - simpl in Hin.
+    destruct Hin as [Heq | Hin].
+    + inversion Heq; subst.
     simpl.
     unfold compose.
     simpl.
-    apply Nat.lt_le_trans with (S (size n)); intuition.
-    apply fold_left_plus.
-  - simpl in *.
-    eapply Nat.lt_le_trans; eauto.
-    apply fold_left_plus_linear.
-    intuition.
+      apply Nat.lt_le_trans with (S (size n)).
+      * apply Nat.lt_succ_diag_r.
+      * apply fold_left_plus.
+    + simpl.
+      unfold compose.
+      simpl.
+      eapply Nat.lt_le_trans.
+      * apply IHd.
+        exact Hin.
+      * apply fold_left_plus_linear.
+        apply Nat.le_add_r.
 Qed.
 
 Fixpoint leb_node (n m: node) : bool :=
